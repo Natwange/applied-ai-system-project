@@ -17,17 +17,43 @@ Replace this paragraph with your own summary of what your version does.
 
 ## How The System Works
 
-Explain your design in plain language.
+### System Flow
 
-Some prompts to answer:
+```
+Input (UserProfile) → Load all songs → Pre-filter candidates → Score each candidate → Rank by score → Explain → Output
+```
 
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
+### What Each Song Stores
 
-You can include a simple diagram or bullet list if helpful.
+Each `Song` tracks: `genre`, `mood`, `energy`, `tempo_bpm`, `valence`, `danceability`, `acousticness`, and `instrumentalness`.
+
+The three features actively used in scoring are **mood**, **genre**, and **energy**. The rest are stored but not yet scored — available for future improvements.
+
+### What the UserProfile Stores
+
+`favorite_genre`, `favorite_mood`, `target_energy`, and `likes_acoustic`.
+
+### Algorithm Recipe
+
+1. **Load** — Read all songs from `songs.csv` into memory as `Song` objects.
+2. **Pre-filter** — Keep only songs that match the user's mood **or** genre. If fewer candidates than `k` remain, fall back to all songs so we always return a full list.
+3. **Score** each candidate (starts at 0):
+   - Mood match → **+4.0** (highest weight — mood drives listening context more than genre)
+   - Genre match → **+3.0**
+   - Energy closeness → `(1.0 - abs(song.energy - user.target_energy)) * 2.0` — max **+2.0**
+4. **Rank** — Sort all scored candidates in descending order, return top `k`.
+5. **Explain** — For each result, generate a plain-language reason based on which features matched.
+
+### Filtering Approach: Context-Based
+
+This system uses **context-based filtering** — it recommends songs similar to what the user says they like, based on features like mood and genre. It does not use **collaborative filtering** (what other users liked), which is the second layer real-world systems like Spotify add on top.
+
+### Potential Biases
+
+- **Mood dominance** — Mood carries the most weight (+4.0). A song that perfectly matches genre and energy but not mood will almost always rank below a mood-match, even if it's a better fit overall.
+- **Pre-filter blind spots** — Songs that don't match on mood or genre are eliminated early. A great song that fits the user's energy perfectly but belongs to an unexpected genre will never be scored unless the fallback triggers.
+- **Energy is the only numeric feature scored** — Tempo, danceability, and valence are ignored in scoring. A slow, low-danceability song can score the same as a high-energy dance track if genre and mood match.
+- **No personalization over time** — Every recommendation starts fresh. The system has no memory of what the user skipped or replayed, so it can't improve from feedback.
 
 ---
 
@@ -209,3 +235,5 @@ A few sentences about what you learned:
 - How did building this change how you think about real music recommenders
 - Where do you think human judgment still matters, even if the model seems "smart"
 
+## Terminal Image
+![alt text](terminal_image.png)
