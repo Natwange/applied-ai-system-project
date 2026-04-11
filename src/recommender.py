@@ -105,12 +105,12 @@ def score_song(user: UserProfile, song: Song) -> float:
     if song.mood == user.favorite_mood:
         score += 4.0
 
-    # Genre — helpful but not a dealbreaker
+    # Genre — halved weight (experiment: energy matters more than genre label)
     if song.genre == user.favorite_genre:
-        score += 3.0
+        score += 1.5
 
-    # Energy — numeric closeness, max +2.0
+    # Energy — doubled weight (experiment: numeric closeness, max +4.0)
     energy_diff = abs(song.energy - user.target_energy)
-    score += (1.0 - energy_diff) * 2.0
+    score += (1.0 - energy_diff) * 4.0
 
     return round(score, 2)

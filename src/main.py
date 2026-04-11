@@ -2,7 +2,7 @@
 Command line runner for the Music Recommender Simulation.
 """
 
-from recommender import load_songs, Recommender, UserProfile
+from recommender import load_songs, Recommender, UserProfile, score_song
 
 
 def main() -> None:
@@ -21,7 +21,7 @@ def main() -> None:
     print("\nTop recommendations:\n")
     for song in recommendations:
         explanation = rec.explain_recommendation(user, song)
-        print(f"{song.title} by {song.artist} — Score: {song.energy}")
+        print(f"{song.title} by {song.artist} — Score: {score_song(user, song)}")
         print(f"Because: {explanation}")
         print()
 

@@ -92,6 +92,60 @@ You can add more tests in `tests/test_recommender.py`.
 
 ---
 
+## System Evaluation — Adversarial Profiles
+
+Four edge-case user profiles were designed to stress-test the scoring logic and expose unexpected behaviour.
+
+---
+
+### Profile 1 — Nonexistent Mood (`pop` + `anxious`, energy 0.9)
+
+**What it tests:** When the user's mood doesn't exist in the catalog, only genre and energy drive scoring.
+
+**Expected:** Pop songs surface at the top via genre bonus alone.
+
+**What happened:** Pop songs ranked #1 and #2 as expected, but the large gap between their scores (~4.9) and everything else (~2.0) shows how much scoring power a mood match would have added.
+
+![Profile 1 — Nonexistent Mood](image.png)
+
+---
+
+### Profile 2 — Conflicting Genre + Mood (`metal` + `chill`, energy 0.4)
+
+**What it tests:** Genre and mood point in opposite directions — metal implies aggression, chill implies calm.
+
+**Expected:** Unclear which dimension "wins."
+
+**What happened:** Mood weight (4.0) dominated genre weight (3.0). Three lofi/ambient songs ranked #1–3. The lone metal song ranked #4. A self-described metal fan who is currently chill gets zero metal in their top 3.
+
+![Profile 2 - Conflicting Genre + Mood](image-1.png)
+
+---
+
+### Profile 3 — Both Preferences Unknown (`bossa nova` + `anxious`, energy 0.5)
+
+**What it tests:** Neither genre nor mood exists in the catalog, so no bonus is ever awarded.
+
+**Expected:** The recommender falls back to pure energy proximity.
+
+**What happened:** All scores clustered between 1.80–1.96 (max possible is 2.0). Results came from five completely different genres (country, r&b, blues, lofi). The system essentially becomes a random energy-proximity picker with no taste signal.
+
+![Profile 3 — Both Preferences Unknown](image-2.png)
+
+---
+
+### Profile 4 — Mood Overrides Genre (`pop` + `sad`, energy 0.9)
+
+**What it tests:** Genre and mood both exist but belong to totally different songs.
+
+**Expected:** Pop songs rank at the top since the user declared pop as their genre.
+
+**What happened (adversarial surprise):** A blues/sad song ranked #1 (score 5.08) ahead of all pop songs (4.94, 4.84). The mood bonus alone was enough to beat genre + energy combined. A "pop fan who wants sad music" gets a blues song first.
+
+![Profile 4 — Mood Overrides Genre](image-3.png)
+
+---
+
 ## Experiments You Tried
 
 Use this section to document the experiments you ran. For example:
@@ -104,13 +158,11 @@ Use this section to document the experiments you ran. For example:
 
 ## Limitations and Risks
 
-Summarize some limitations of your recommender.
-
-Examples:
-
-- It only works on a tiny catalog
-- It does not understand lyrics or language
-- It might over favor one genre or mood
+- **Mood dominates genre.** The mood score (+4.0) outweighs the genre score (+1.5–3.0), so a user who says they like pop but are feeling sad right now will get a blues song at #1 — ahead of every pop song. Mood overrides the user's stated long-term taste.
+- **Single-song moods leave no real choice.** 11 of 14 moods in the catalog appear on exactly one song. For moods like "nostalgic" or "romantic", the mood bonus fires on only one track, locking it in as #1 regardless of how poorly it fits everything else.
+- **The pre-filter silently hides songs.** Songs that don't match on mood or genre are eliminated before scoring even starts. A perfectly matched song in an unexpected genre is invisible to the user — no explanation is ever generated for why it was excluded.
+- **Only 18 songs.** The catalog is too small for meaningful diversity. Multiple user profiles produce the same top results because there simply aren't enough songs to differentiate between different tastes.
+- **No memory or feedback loop.** Every session starts fresh. The system cannot learn from what the user skipped or replayed, so it cannot improve over time.
 
 You will go deeper on this in your model card.
 
@@ -122,10 +174,9 @@ Read and complete `model_card.md`:
 
 [**Model Card**](model_card.md)
 
-Write 1 to 2 paragraphs here about what you learned:
+The clearest thing this project taught me about how recommenders turn data into predictions: the weights you assign are not just numbers, they are decisions about what matters more. Giving mood a score of +4.0 and genre a score of +1.5 sounds like a small technical choice, but it meant that a user's emotional state at a given moment carries almost three times more influence than their long-term musical identity. You do not see that tradeoff until you run the system on a user whose mood and genre disagree — and then it becomes impossible to miss.
 
-- about how recommenders turn data into predictions
-- about where bias or unfairness could show up in systems like this
+Bias in this kind of system does not look like an error. The "pop + sad → blues #1" result was not a bug. The system did exactly what it was designed to do. That is what makes bias hard to catch: it shows up as correct behavior that produces unfair outcomes for specific users. In this case, the system quietly disadvantaged anyone whose current emotional state differs from their usual taste — a real pattern that would affect a large portion of real users. The only way to find it was to deliberately test a profile designed to break the assumptions, which is why adversarial testing matters even for simple systems.
 
 
 ---
