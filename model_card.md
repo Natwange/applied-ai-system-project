@@ -2,13 +2,13 @@
 
 ## 1. Model Name
 
-**VibeFinder 1.0**
+**VibeMatch**
 
 ---
 
 ## 2. Goal / Task
 
-VibeFinder suggests songs from a small catalog that match how a user is feeling and what kind of music they like. It takes in a user's favorite genre, current mood, preferred energy level, and whether they like acoustic music, then returns the top 5 songs that best fit that description.
+VibeMatch suggests songs from a small catalog that match how a user is feeling and what kind of music they like. It takes in a user's favorite genre, current mood, preferred energy level, and whether they like acoustic music, then returns the top 5 songs that best fit that description.
 
 This is a classroom simulation, not a production system. It is designed to help you understand how real recommenders like Spotify or YouTube Music work under the hood — not to replace them.
 
