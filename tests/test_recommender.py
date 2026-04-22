@@ -1,6 +1,8 @@
 import os
 import pytest
-from src.recommender import Song, UserProfile, Recommender, load_songs
+from src.models import Song, UserProfile
+from src.data_loader import load_songs
+from src.recommender import Recommender
 
 # ---------------------------------------------------------------------------
 # System evaluation fixture — loads real song catalog

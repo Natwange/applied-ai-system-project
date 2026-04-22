@@ -1,29 +1,24 @@
-"""
-Command line runner for the Music Recommender Simulation.
-"""
+import os
+import sys
 
-from recommender import load_songs, Recommender, UserProfile, score_song
+from src.data_loader import load_songs
+from src.agent import run_session
+
+DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "songs.csv")
 
 
 def main() -> None:
-    songs = load_songs("data/songs.csv")
-    rec = Recommender(songs)
+    try:
+        songs = load_songs(DATA_PATH)
+    except (FileNotFoundError, ValueError) as e:
+        print(f"[ERROR] Could not load song catalog: {e}")
+        sys.exit(1)
 
-    user = UserProfile(
-        favorite_genre="pop",
-        favorite_mood="happy",
-        target_energy=0.8,
-        likes_acoustic=False,
-    )
-
-    recommendations = rec.recommend(user, k=5)
-
-    print("\nTop recommendations:\n")
-    for song in recommendations:
-        explanation = rec.explain_recommendation(user, song)
-        print(f"{song.title} by {song.artist} — Score: {score_song(user, song)}")
-        print(f"Because: {explanation}")
-        print()
+    try:
+        run_session(songs)
+    except KeyboardInterrupt:
+        print("\n\n  Session interrupted. Goodbye!")
+        sys.exit(0)
 
 
 if __name__ == "__main__":
