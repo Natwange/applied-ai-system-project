@@ -1,290 +1,301 @@
-# 🎵 Music Recommender Simulation
+# VibeFinder 2.0 — Feedback-Driven Music Recommendation
 
-## Project Summary
-
-In this project you will build and explain a small music recommender system.
-
-Your goal is to:
-
-- Represent songs and a user "taste profile" as data
-- Design a scoring rule that turns that data into recommendations
-- Evaluate what your system gets right and wrong
-- Reflect on how this mirrors real world AI recommenders
-
-Replace this paragraph with your own summary of what your version does.
+VibeFinder 2.0 is an interactive, agentic music recommendation system built in Python. It recommends songs based on your preferences, accepts natural-language feedback, updates its internal model of your taste, and reruns recommendations — all within a single CLI session.
 
 ---
 
-## How The System Works
+## Original Project — VibeFinder 1.0
 
-### System Flow
-
-```
-Input (UserProfile) → Load all songs → Pre-filter candidates → Score each candidate → Rank by score → Explain → Output
-```
-
-### What Each Song Stores
-
-Each `Song` tracks: `genre`, `mood`, `energy`, `tempo_bpm`, `valence`, `danceability`, `acousticness`, and `instrumentalness`.
-
-The three features actively used in scoring are **mood**, **genre**, and **energy**. The rest are stored but not yet scored — available for future improvements.
-
-### What the UserProfile Stores
-
-`favorite_genre`, `favorite_mood`, `target_energy`, and `likes_acoustic`.
-
-### Algorithm Recipe
-
-1. **Load** — Read all songs from `songs.csv` into memory as `Song` objects.
-2. **Pre-filter** — Keep only songs that match the user's mood **or** genre. If fewer candidates than `k` remain, fall back to all songs so we always return a full list.
-3. **Score** each candidate (starts at 0):
-   - Mood match → **+4.0** (highest weight — mood drives listening context more than genre)
-   - Genre match → **+3.0**
-   - Energy closeness → `(1.0 - abs(song.energy - user.target_energy)) * 2.0` — max **+2.0**
-4. **Rank** — Sort all scored candidates in descending order, return top `k`.
-5. **Explain** — For each result, generate a plain-language reason based on which features matched.
-
-### Filtering Approach: Context-Based
-
-This system uses **context-based filtering** — it recommends songs similar to what the user says they like, based on features like mood and genre. It does not use **collaborative filtering** (what other users liked), which is the second layer real-world systems like Spotify add on top.
-
-### Potential Biases
-
-- **Mood dominance** — Mood carries the most weight (+4.0). A song that perfectly matches genre and energy but not mood will almost always rank below a mood-match, even if it's a better fit overall.
-- **Pre-filter blind spots** — Songs that don't match on mood or genre are eliminated early. A great song that fits the user's energy perfectly but belongs to an unexpected genre will never be scored unless the fallback triggers.
-- **Energy is the only numeric feature scored** — Tempo, danceability, and valence are ignored in scoring. A slow, low-danceability song can score the same as a high-energy dance track if genre and mood match.
-- **No personalization over time** — Every recommendation starts fresh. The system has no memory of what the user skipped or replayed, so it can't improve from feedback.
+VibeFinder 1.0 (Modules 1–3) was a rule-based music recommender that took a static user profile (genre, mood, energy, acoustic preference) and returned a ranked list of 5 songs from an 18-song catalog using a hardcoded scoring function. It generated plain-language explanations for each recommendation but had no feedback loop, no input validation, and no way to refine results after the initial output. The project established the core data model and scoring architecture that VibeFinder 2.0 is built on.
 
 ---
 
-## Getting Started
+## What VibeFinder 2.0 Adds
 
-### Setup
+| Feature | 1.0 | 2.0 |
+|---|---|---|
+| Recommendation engine | One-shot | Iterative feedback loop (up to 3 rounds) |
+| Input handling | No validation | Guardrails, fuzzy matching, clamping |
+| Scoring | Fixed weights | 4 swappable scoring strategies |
+| Acoustic scoring | Stored, not used | Active scoring dimension |
+| Feedback | None | Natural-language → profile updates |
+| Observability | Print statements | Structured tool-call trace + session log |
+| Song catalog | 18 songs | 48 songs across 15 genres and 14 moods |
+| Evaluation | Manual | 16-scenario automated harness |
 
-1. Create a virtual environment (optional but recommended):
+---
 
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate      # Mac or Linux
-   .venv\Scripts\activate         # Windows
+## Architecture Overview
 
-2. Install dependencies
+```
+User / CLI
+    │
+    ▼
+Input Validator ──(fuzzy match, clamp, warn)──► Profile Builder
+    │
+    ▼
+Scoring Mode Selector  [Mood-First | Genre-First | Energy-Focused | Balanced]
+    │
+    ▼
+Agent Orchestrator  ◄────────────────────────────────────┐
+    │  plan_round() → dispatch_tool()                     │
+    ▼                                                     │
+Recommendation Engine                           Profile Updater
+    │  score_song() × 48 songs                           │
+    ▼                                                     │
+Explanation Engine                             Feedback Interpreter
+    │                                                     │
+    ▼                                                     │
+Top-5 Results + Explanations ──► Human ──► Feedback ─────┘
+    │
+    ▼
+Session Summary + Log File
+    │
+    ▼
+Evaluation Harness  [16 pass/fail scenarios → optional Markdown report]
+```
+
+The **Agent Orchestrator** is the core of the system. Rather than executing steps silently, it names each action as a tool call before dispatching it — `parse_feedback()`, `update_profile()`, `rerun_recommender()` — and logs every step to both the console and a timestamped session file. This makes the reasoning observable at runtime and auditable after the fact.
+
+The **Scoring Strategy** pattern means the four ranking modes are interchangeable objects. Swapping from Mood-First to Energy-Focused changes which dimension dominates without touching the scoring logic itself.
+
+---
+
+## Setup
+
+**Requirements:** Python 3.12+
 
 ```bash
+# 1. Clone the repository
+git clone <repo-url>
+cd applied-ai-system-project
+
+# 2. Create and activate a virtual environment
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+source .venv/bin/activate     # Mac / Linux
+
+# 3. Install dependencies
 pip install -r requirements.txt
-```
 
-3. Run the app:
-
-```bash
+# 4. Run the app
 python -m src.main
-```
 
-### Running Tests
+# 5. Run the evaluation harness
+python -m scripts.evaluate
 
-Run the starter tests with:
+# 6. Save an evaluation report
+python -m scripts.evaluate --save
 
-```bash
+# 7. Run tests
 pytest
 ```
 
-You can add more tests in `tests/test_recommender.py`.
+No API keys or external services required. Everything runs locally.
 
 ---
 
-## System Evaluation — Adversarial Profiles
+## Sample Interactions
 
-Four edge-case user profiles were designed to stress-test the scoring logic and expose unexpected behaviour.
+### Demo 1 — Normal case with energy feedback
 
----
+```
+==================================================
+  VibeFinder 2.0 — Tell us your preferences
+==================================================
+  Favourite genre: pop
+  Current mood: happy
+  Target energy (0.0 – 1.0): 0.8
+  Like acoustic music? (yes / no): no
 
-### Profile 1 — Nonexistent Mood (`pop` + `anxious`, energy 0.9)
+  Select a scoring mode:
+    [1] Mood-First      [2] Genre-First
+    [3] Energy-Focused  [4] Balanced
+  Enter 1–4 (default 1): 1
+  Using: Mood-First
 
-**What it tests:** When the user's mood doesn't exist in the catalog, only genre and energy drive scoring.
+  --- Initial Recommendations ---
 
-**Expected:** Pop songs surface at the top via genre bonus alone.
+  1. Sunrise City — Neon Echo
+     Genre: pop  |  Mood: happy  |  Energy: 0.82  |  Score: 9.69
+     Recommended because: mood matches "happy", genre matches "pop",
+     energy is very close to your target (0.82 vs 0.80) [Mood-First]
 
-**What happened:** Pop songs ranked #1 and #2 as expected, but the large gap between their scores (~4.9) and everything else (~2.0) shows how much scoring power a mood match would have added.
+  2. Rooftop Lights — Indigo Parade
+     Genre: indie pop  |  Mood: happy  |  Energy: 0.76  |  Score: 7.82
+     Recommended because: mood matches "happy",
+     energy is near your target (0.76 vs 0.80) [Mood-First]
 
-![Profile 1 — Nonexistent Mood](image.png)
+  ...
 
----
+  Your feedback: too energetic
 
-### Profile 2 — Conflicting Genre + Mood (`metal` + `chill`, energy 0.4)
+  Interpretation:
+    detected energy signal → energy down by 0.15
 
-**What it tests:** Genre and mood point in opposite directions — metal implies aggression, chill implies calm.
+  [TOOL]  parse_feedback()   → energy_delta=-0.15, mood=None, genre=None
+  [TOOL]  update_profile()   → 1 change(s)
+  [PROFILE] target_energy: 0.80 → 0.65
+  [TOOL]  rerun_recommender() → 5 results, top score 8.94
 
-**Expected:** Unclear which dimension "wins."
+  Profile updates:
+    target_energy: 0.80 → 0.65
 
-**What happened:** Mood weight (4.0) dominated genre weight (3.0). Three lofi/ambient songs ranked #1–3. The lone metal song ranked #4. A self-described metal fan who is currently chill gets zero metal in their top 3.
+  --- Refined Recommendations (Round 1) ---
 
-![Profile 2 - Conflicting Genre + Mood](image-1.png)
+  1. Sunrise City — Neon Echo
+     Genre: pop  |  Mood: happy  |  Energy: 0.82  |  Score: 8.35
+     Recommended because: mood matches "happy", genre matches "pop" [Mood-First]
 
----
-
-### Profile 3 — Both Preferences Unknown (`bossa nova` + `anxious`, energy 0.5)
-
-**What it tests:** Neither genre nor mood exists in the catalog, so no bonus is ever awarded.
-
-**Expected:** The recommender falls back to pure energy proximity.
-
-**What happened:** All scores clustered between 1.80–1.96 (max possible is 2.0). Results came from five completely different genres (country, r&b, blues, lofi). The system essentially becomes a random energy-proximity picker with no taste signal.
-
-![Profile 3 — Both Preferences Unknown](image-2.png)
-
----
-
-### Profile 4 — Mood Overrides Genre (`pop` + `sad`, energy 0.9)
-
-**What it tests:** Genre and mood both exist but belong to totally different songs.
-
-**Expected:** Pop songs rank at the top since the user declared pop as their genre.
-
-**What happened (adversarial surprise):** A blues/sad song ranked #1 (score 5.08) ahead of all pop songs (4.94, 4.84). The mood bonus alone was enough to beat genre + energy combined. A "pop fan who wants sad music" gets a blues song first.
-
-![Profile 4 — Mood Overrides Genre](image-3.png)
-
----
-
-## Experiments You Tried
-
-Use this section to document the experiments you ran. For example:
-
-- What happened when you changed the weight on genre from 2.0 to 0.5
-- What happened when you added tempo or valence to the score
-- How did your system behave for different types of users
+  2. Block Party — Kenzo Floe
+     Genre: hip-hop  |  Mood: uplifting  |  Energy: 0.79  |  Score: 5.81
+     ...
+```
 
 ---
 
-## Limitations and Risks
+### Demo 2 — Edge case: unknown mood with fallback
 
-- **Mood dominates genre.** The mood score (+4.0) outweighs the genre score (+1.5–3.0), so a user who says they like pop but are feeling sad right now will get a blues song at #1 — ahead of every pop song. Mood overrides the user's stated long-term taste.
-- **Single-song moods leave no real choice.** 11 of 14 moods in the catalog appear on exactly one song. For moods like "nostalgic" or "romantic", the mood bonus fires on only one track, locking it in as #1 regardless of how poorly it fits everything else.
-- **The pre-filter silently hides songs.** Songs that don't match on mood or genre are eliminated before scoring even starts. A perfectly matched song in an unexpected genre is invisible to the user — no explanation is ever generated for why it was excluded.
-- **Only 18 songs.** The catalog is too small for meaningful diversity. Multiple user profiles produce the same top results because there simply aren't enough songs to differentiate between different tastes.
-- **No memory or feedback loop.** Every session starts fresh. The system cannot learn from what the user skipped or replayed, so it cannot improve over time.
+```
+  Favourite genre: bossa nova
+  Current mood: anxious
+  Target energy (0.0 – 1.0): 0.4
+  Like acoustic music? (yes / no): yes
 
-You will go deeper on this in your model card.
+  [!] Genre "bossa nova" not found in catalog. Genre matching will be skipped.
+  [!] Mood "anxious" not found in catalog. Mood matching will be skipped,
+      falling back to genre and energy.
+
+  [GUARDRAIL] Genre "bossa nova" not found in catalog.
+  [GUARDRAIL] Mood "anxious" not found in catalog.
+
+  --- Initial Recommendations ---
+
+  1. Library Rain — Paper Lanterns
+     Genre: lofi  |  Mood: chill  |  Energy: 0.35  |  Score: 3.41
+     Closest available match under Mood-First mode.
+  ...
+```
+
+The system does not crash. It warns the user, falls back gracefully, and still returns 5 results ranked by energy proximity and acoustic alignment.
+
+---
+
+### Demo 3 — Liked song inference
+
+```
+  Your feedback: I liked song 2
+
+  Interpretation:
+    detected liked songs → IDs [4]
+
+  [TOOL]  parse_feedback()     → energy_delta=+0.00, mood=None, genre=None
+  [TOOL]  update_profile()     → 1 change(s)
+  [PROFILE] liked song 4 (Library Rain): energy nudge 0.80 → 0.79
+
+  Profile updates:
+    liked song 4 (Library Rain): energy nudge 0.80 → 0.79
+```
+
+The system extracts the features of the liked song and gently nudges `target_energy` toward it. Future recommendations for songs similar in genre or mood to the liked song are flagged as `ranked higher after your feedback` in the explanation.
+
+---
+
+## Design Decisions
+
+**Rule-based feedback interpreter, not an LLM.**
+Using Claude or GPT to parse feedback would make the system harder to test, less predictable, and would hide the reasoning inside a model call. A rule-based interpreter is fully transparent — you can read exactly how `"too energetic"` becomes `energy_delta = -0.15`. This was the right trade-off for a system where observability and reliability were explicit goals.
+
+**Strategy pattern for scoring modes.**
+Hardcoding four sets of weights into one function would have made the code fragile and the modes invisible to the user. The Strategy pattern keeps each mode as a standalone object and makes the active mode part of the session trace. Adding a fifth mode later is a one-file change.
+
+**Fuzzy matching over hard rejection.**
+When a user types `"happ"` or `"lofy"`, rejecting the input outright is a bad experience. Using Python's built-in `difflib` to suggest the closest valid value and warn — rather than crash — makes the system usable without sacrificing correctness. Hard rejection is reserved only for inputs that can't be recovered (non-numeric energy, non-yes/no acoustic).
+
+**Liked-song inference as a partial nudge, not an override.**
+When you say you liked a song, its energy is not immediately adopted as your new target. Instead, `target_energy` moves 10% of the distance toward the liked song's energy. This prevents a single feedback signal from completely overriding the user's stated preference, which is the behaviour you'd want from a real system.
+
+---
+
+## Testing Summary
+
+**44 unit tests across 3 files — all passing.**
+
+| File | Tests | What it covers |
+|---|---|---|
+| `test_recommender.py` | 12 | Scoring, ranking, explanations, adversarial profiles |
+| `test_validator.py` | 16 | Input validation, fuzzy matching, edge cases |
+| `test_feedback.py` | 16 | Feedback parsing, profile updates, energy clamping |
+
+**16-scenario evaluation harness** covering normal users, adversarial inputs, and feedback refinement loops.
+
+**What worked well:** The modular design meant each component could be tested independently. Validator and feedback tests were straightforward to write because the functions have clear inputs and outputs. The evaluation harness caught a real issue early — the energy nudge from liked-song inference was too small (0.002) to survive rounding at 2 decimal places with songs that were very close in energy to the target.
+
+**What was harder:** Testing the agent's tool-dispatch loop required simulating the feedback cycle programmatically rather than interactively. The evaluation script handles this by calling `parse_feedback` and `update_profile_from_feedback` directly, bypassing the CLI.
+
+**Known limitation:** The feedback interpreter is keyword-based, so phrasing like `"dial back the intensity"` won't be detected even though it means the same thing as `"too energetic"`. A more robust system would use embeddings or a small classification model.
 
 ---
 
 ## Reflection
 
-Read and complete `model_card.md`:
+Building VibeFinder 2.0 clarified something that isn't obvious from reading about AI systems: the hardest part is not the algorithm, it is the edges. The scoring function took an afternoon. The guardrails, feedback conflict resolution, and energy-nudge rounding took longer — because that is where the system either handles reality gracefully or silently fails.
 
-[**Model Card**](model_card.md)
+The decision to keep the feedback interpreter rule-based taught me something about the trade-off between capability and trustworthiness. An LLM-based interpreter would understand more phrases. But it would also be harder to test, slower to explain, and dependent on an external service. For a system where the whole point is observable reasoning, adding a black box in the middle would undermine the thing that makes it interesting.
 
-The clearest thing this project taught me about how recommenders turn data into predictions: the weights you assign are not just numbers, they are decisions about what matters more. Giving mood a score of +4.0 and genre a score of +1.5 sounds like a small technical choice, but it meant that a user's emotional state at a given moment carries almost three times more influence than their long-term musical identity. You do not see that tradeoff until you run the system on a user whose mood and genre disagree — and then it becomes impossible to miss.
+The agentic loop — where the system plans which tools to call, calls them, logs each one, and shows the user what changed — also shifted how I think about what "AI" means in a product. The intelligence here is not in any single function. It is in the structure: the feedback-update-rerank cycle, the conflict resolution rules, the session trace. That is the part that makes the system feel like it reasons, even though every decision is deterministic and readable.
 
-Bias in this kind of system does not look like an error. The "pop + sad → blues #1" result was not a bug. The system did exactly what it was designed to do. That is what makes bias hard to catch: it shows up as correct behavior that produces unfair outcomes for specific users. In this case, the system quietly disadvantaged anyone whose current emotional state differs from their usual taste — a real pattern that would affect a large portion of real users. The only way to find it was to deliberately test a profile designed to break the assumptions, which is why adversarial testing matters even for simple systems.
+### Limitations and Bias
 
+The most persistent bias is mood dominance. Because mood carries the highest scoring weight, a user who declares a genre preference but is currently in a different emotional state will consistently receive results that match their mood over their genre. A pop fan who is feeling melancholic gets blues and classical songs ahead of pop — every single time, by design. This is not a bug, but it would disadvantage users whose emotional state regularly differs from their stated taste.
 
----
+The feedback interpreter is keyword-dependent. Phrases like "dial back the energy" or "something more laid-back" will not be detected, even though they clearly mean the same thing as "less energetic." A user who does not phrase feedback in the expected keywords gets no profile update and no explanation — the system just moves on silently.
 
-## 7. `model_card_template.md`
+### Could This Be Misused?
 
-Combines reflection and model card framing from the Module 3 guidance. :contentReference[oaicite:2]{index=2}  
+A music recommender is low-stakes, but the underlying pattern — collecting preference signals, updating an internal user model, and adjusting outputs accordingly — is exactly the same pattern used in systems with higher consequences (news feeds, ad targeting, hiring tools). The risk in those contexts is that iterative feedback loops can create filter bubbles or reinforce existing biases in the data rather than expanding what the user is exposed to. In VibeFinder, the nudge system deliberately limits how far a single feedback signal can shift the profile (10% of the gap, not a full override) as a small guard against this. In a production system, that kind of dampening and diversity injection would need to be much more deliberate.
 
-```markdown
-# 🎧 Model Card - Music Recommender Simulation
+### What Surprised Me During Testing
 
-## 1. Model Name
+The most surprising failure was the energy nudge rounding issue. When a user likes a song whose energy is very close to their current target (e.g., 0.82 vs a target of 0.80), the nudge — 10% of a 0.02 gap — is 0.002. After rounding to two decimal places, that disappears entirely. The profile records the song as liked, but the energy value does not visibly change. The system behaved exactly as coded, but the result felt wrong: the user liked a song and nothing seemed to happen. This is the kind of failure that only appears when you run the system on real data with real numbers, not when you reason about the logic abstractly.
 
-Give your recommender a name, for example:
+### Collaboration with AI During This Project
 
-> VibeFinder 1.0
+AI was used throughout the planning and implementation of VibeFinder 2.0.
 
----
+**One instance where it was genuinely helpful:** AI proposed using the Strategy pattern for the scoring modes early in the design phase. Rather than hardcoding four sets of weights into a single function with conditional branches, it suggested making each mode a standalone object that the recommender accepts as a parameter. That recommendation made the modes testable in isolation, made the active mode visible in the session trace, and would make adding a fifth mode later a one-file change. It was the right architectural call and I would not have framed it that way on my own.
 
-## 2. Intended Use
-
-- What is this system trying to do
-- Who is it for
-
-Example:
-
-> This model suggests 3 to 5 songs from a small catalog based on a user's preferred genre, mood, and energy level. It is for classroom exploration only, not for real users.
+**One instance where its suggestion was flawed:** AI initially suggested using an LLM API (Claude or GPT) to interpret the user's natural-language feedback. The reasoning was that it would handle a wider range of phrasings more gracefully than keyword matching. That is technically true, but the suggestion was wrong for this project. An LLM-based interpreter would make the feedback loop non-deterministic, much harder to test (you cannot write a unit test that reliably checks what an LLM will return), dependent on an external service with latency and cost, and fundamentally opaque — the exact opposite of the observable reasoning the system was designed to demonstrate. The rule-based approach was the right call, and the AI's suggestion to use an LLM had to be rejected on architectural grounds, not capability grounds.
 
 ---
 
-## 3. How It Works (Short Explanation)
+## Project Structure
 
-Describe your scoring logic in plain language.
-
-- What features of each song does it consider
-- What information about the user does it use
-- How does it turn those into a number
-
-Try to avoid code in this section, treat it like an explanation to a non programmer.
-
----
-
-## 4. Data
-
-Describe your dataset.
-
-- How many songs are in `data/songs.csv`
-- Did you add or remove any songs
-- What kinds of genres or moods are represented
-- Whose taste does this data mostly reflect
-
----
-
-## 5. Strengths
-
-Where does your recommender work well
-
-You can think about:
-- Situations where the top results "felt right"
-- Particular user profiles it served well
-- Simplicity or transparency benefits
+```
+src/
+  models.py         Song, UserProfile, SessionState
+  data_loader.py    CSV loading with field validation
+  scoring_modes.py  4 scoring strategies (Strategy pattern)
+  recommender.py    Scoring, ranking, explanations
+  validator.py      Input guardrails and fuzzy matching
+  feedback.py       Natural-language feedback interpreter
+  logger.py         Structured console + file logging
+  agent.py          Session orchestrator and tool dispatch
+  main.py           CLI entry point
+scripts/
+  evaluate.py       16-scenario evaluation harness
+data/
+  songs.csv         48 songs across 15 genres, 14 moods
+tests/
+  test_recommender.py
+  test_validator.py
+  test_feedback.py
+logs/               Auto-generated session logs
+reports/            Optional evaluation report output
+```
 
 ---
 
-## 6. Limitations and Bias
+## Model Card
 
-Where does your recommender struggle
-
-Some prompts:
-- Does it ignore some genres or moods
-- Does it treat all users as if they have the same taste shape
-- Is it biased toward high energy or one genre by default
-- How could this be unfair if used in a real product
-
----
-
-## 7. Evaluation
-
-How did you check your system
-
-Examples:
-- You tried multiple user profiles and wrote down whether the results matched your expectations
-- You compared your simulation to what a real app like Spotify or YouTube tends to recommend
-- You wrote tests for your scoring logic
-
-You do not need a numeric metric, but if you used one, explain what it measures.
-
----
-
-## 8. Future Work
-
-If you had more time, how would you improve this recommender
-
-Examples:
-
-- Add support for multiple users and "group vibe" recommendations
-- Balance diversity of songs instead of always picking the closest match
-- Use more features, like tempo ranges or lyric themes
-
----
-
-## 9. Personal Reflection
-
-A few sentences about what you learned:
-
-- What surprised you about how your system behaved
-- How did building this change how you think about real music recommenders
-- Where do you think human judgment still matters, even if the model seems "smart"
-
-## Terminal Image
-![alt text](terminal_image.png)
+See [model_card.md](model_card.md) for a full breakdown of intended use, limitations, bias analysis, and evaluation methodology.

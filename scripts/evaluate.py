@@ -84,7 +84,7 @@ def test_different_users_get_different_top_results(songs: list[Song]) -> TestRes
     p3 = UserProfile("classical", "melancholic", 0.22, True)
     tops = {recommend(p, songs, DEFAULT_STRATEGY, k=1)[0][0].id for p in (p1, p2, p3)}
     if len(tops) == 3:
-        return _pass(name, cat, "3 distinct users → 3 distinct top songs")
+        return _pass(name, cat, "3 distinct users -> 3 distinct top songs")
     return _fail(name, cat, f"Expected 3 distinct top songs, got {len(tops)}")
 
 
@@ -99,7 +99,7 @@ def test_unknown_mood_fallback(songs: list[Song]) -> TestResult:
     results = recommend(profile, songs, DEFAULT_STRATEGY)
     has_warning = any("not found" in w.lower() or "fallback" in w.lower() for w in warnings)
     if len(results) == 5 and has_warning:
-        return _pass(name, cat, f"Returned 5 results with fallback warning")
+        return _pass(name, cat, "Returned 5 results with fallback warning")
     return _fail(name, cat, f"results={len(results)}, warning_issued={has_warning}")
 
 
@@ -114,7 +114,7 @@ def test_unknown_genre_fallback(songs: list[Song]) -> TestResult:
     return _fail(name, cat, f"results={len(results)}, warning_issued={has_warning}")
 
 
-def test_energy_out_of_range_clamped(songs: list[Song]) -> TestResult:
+def test_energy_out_of_range_clamped(_songs: list[Song]) -> TestResult:
     name, cat = "Out-of-range energy is clamped", "adversarial"
     _, warnings = build_validated_profile("pop", "happy", "1.5", "no")
     has_warning = any("clamped" in w.lower() for w in warnings)
@@ -124,7 +124,7 @@ def test_energy_out_of_range_clamped(songs: list[Song]) -> TestResult:
     return _fail(name, cat, f"energy={profile.target_energy}, warning_issued={has_warning}")
 
 
-def test_invalid_energy_raises(songs: list[Song]) -> TestResult:
+def test_invalid_energy_raises(_songs: list[Song]) -> TestResult:
     name, cat = "Non-numeric energy raises ValueError", "adversarial"
     try:
         build_validated_profile("pop", "happy", "abc", "no")
@@ -133,7 +133,7 @@ def test_invalid_energy_raises(songs: list[Song]) -> TestResult:
         return _pass(name, cat, "ValueError raised as expected")
 
 
-def test_invalid_acoustic_raises(songs: list[Song]) -> TestResult:
+def test_invalid_acoustic_raises(_songs: list[Song]) -> TestResult:
     name, cat = "Invalid acoustic input raises ValueError", "adversarial"
     try:
         build_validated_profile("pop", "happy", "0.5", "maybe")
@@ -199,8 +199,6 @@ def test_feedback_rerank_changes_results(songs: list[Song]) -> TestResult:
     name, cat = "Feedback: rerank after 'too energetic' shifts results", "feedback"
     profile = UserProfile("pop", "happy", 0.8, False)
     initial_results = recommend(profile, songs, DEFAULT_STRATEGY)
-    initial_top_id = initial_results[0][0].id
-
     parsed = parse_feedback("too energetic", initial_results)
     update_profile_from_feedback(profile, parsed, initial_results)
     new_results = recommend(profile, songs, DEFAULT_STRATEGY)
@@ -209,13 +207,14 @@ def test_feedback_rerank_changes_results(songs: list[Song]) -> TestResult:
     new_avg     = sum(s.energy for s, _ in new_results) / len(new_results)
 
     if new_avg < initial_avg:
-        return _pass(name, cat, f"Avg energy dropped: {initial_avg:.2f} → {new_avg:.2f}")
-    return _fail(name, cat, f"Expected lower avg energy after feedback, got {initial_avg:.2f} → {new_avg:.2f}")
+        return _pass(name, cat, f"Avg energy dropped: {initial_avg:.2f} -> {new_avg:.2f}")
+    return _fail(name, cat, f"Expected lower avg energy after feedback, got {initial_avg:.2f} -> {new_avg:.2f}")
 
 
 def test_feedback_liked_song_nudges_energy(songs: list[Song]) -> TestResult:
     name, cat = "Feedback: liked song nudges target energy", "feedback"
-    profile = UserProfile("pop", "happy", 0.8, False)
+    # Use target_energy=0.5 so song 1 (energy=0.82) produces a nudge of 0.032 — large enough to survive rounding
+    profile = UserProfile("pop", "happy", 0.5, False)
     initial_results = recommend(profile, songs, DEFAULT_STRATEGY)
     liked_song = initial_results[0][0]
     original_energy = profile.target_energy
@@ -223,7 +222,6 @@ def test_feedback_liked_song_nudges_energy(songs: list[Song]) -> TestResult:
     parsed = parse_feedback("I liked song 1", initial_results)
     update_profile_from_feedback(profile, parsed, initial_results)
 
-    nudge = abs(liked_song.energy - original_energy) * 0.1
     energy_changed = abs(profile.target_energy - original_energy) > 0.001
     liked_tracked  = liked_song.id in profile.liked_song_ids
 
@@ -308,7 +306,7 @@ def save_report(results: list[TestResult], path: str) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     passed = sum(1 for r in results if r.passed)
     lines = [
-        f"# VibeFinder 2.0 — Evaluation Report",
+        "# VibeFinder 2.0 - Evaluation Report",
         f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         f"Result: {passed}/{len(results)} passed\n",
     ]

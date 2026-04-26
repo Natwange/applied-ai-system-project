@@ -30,7 +30,7 @@ def log_session_start(mode_label: str) -> None:
 def log_tool_call(tool_name: str, result_summary: str = "") -> None:
     msg = f"{tool_name}()"
     if result_summary:
-        msg += f" → {result_summary}"
+        msg += f" -> {result_summary}"
     _log("TOOL", msg)
 
 
@@ -60,7 +60,7 @@ def log_round_complete(round_num: int, top_score: float) -> None:
 
 
 def log_mode_switch(old_label: str, new_label: str) -> None:
-    _log("MODE", f"Switched: {old_label} → {new_label}")
+    _log("MODE", f"Switched: {old_label} -> {new_label}")
 
 
 def log_guardrail(message: str) -> None:

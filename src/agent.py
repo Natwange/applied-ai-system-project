@@ -179,13 +179,13 @@ def print_session_summary(session: SessionState, final_results: list[tuple[Song,
         print("\n  Profile changes across session:")
         first = session.profile_snapshots[0]
         if first.favorite_genre != p.favorite_genre:
-            print(f"    genre:   {first.favorite_genre} → {p.favorite_genre}")
+            print(f"    genre:   {first.favorite_genre} -> {p.favorite_genre}")
         if first.favorite_mood != p.favorite_mood:
-            print(f"    mood:    {first.favorite_mood} → {p.favorite_mood}")
+            print(f"    mood:    {first.favorite_mood} -> {p.favorite_mood}")
         if abs(first.target_energy - p.target_energy) >= 0.01:
-            print(f"    energy:  {first.target_energy:.2f} → {p.target_energy:.2f}")
+            print(f"    energy:  {first.target_energy:.2f} -> {p.target_energy:.2f}")
         if first.likes_acoustic != p.likes_acoustic:
-            print(f"    acoustic:{first.likes_acoustic} → {p.likes_acoustic}")
+            print(f"    acoustic:{first.likes_acoustic} -> {p.likes_acoustic}")
 
     print("\n  Final top picks:")
     for i, (song, score) in enumerate(final_results[:3], start=1):
@@ -224,16 +224,16 @@ def run_session(songs: list[Song]) -> None:
 
         print("\n  Interpretation:")
         if parsed.new_mood:
-            print(f"    detected mood change → {parsed.new_mood}")
+            print(f"    detected mood change -> {parsed.new_mood}")
         if parsed.energy_delta != 0.0:
             direction = "down" if parsed.energy_delta < 0 else "up"
-            print(f"    detected energy signal → energy {direction} by {abs(parsed.energy_delta)}")
+            print(f"    detected energy signal -> energy {direction} by {abs(parsed.energy_delta)}")
         if parsed.likes_acoustic is not None:
-            print(f"    detected acoustic preference → {parsed.likes_acoustic}")
+            print(f"    detected acoustic preference -> {parsed.likes_acoustic}")
         if parsed.new_genre:
-            print(f"    detected genre signal → {parsed.new_genre}")
+            print(f"    detected genre signal -> {parsed.new_genre}")
         if parsed.liked_song_ids:
-            print(f"    detected liked songs → IDs {parsed.liked_song_ids}")
+            print(f"    detected liked songs -> IDs {parsed.liked_song_ids}")
         if parsed.conflicts:
             log.log_conflicts(parsed.conflicts)
             for c in parsed.conflicts:

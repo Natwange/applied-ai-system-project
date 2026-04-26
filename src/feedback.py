@@ -118,25 +118,25 @@ def update_profile_from_feedback(
     if parsed.energy_delta != 0.0:
         old = profile.target_energy
         profile.target_energy = round(max(0.0, min(1.0, old + parsed.energy_delta)), 2)
-        changes.append(f"target_energy: {old:.2f} → {profile.target_energy:.2f}")
+        changes.append(f"target_energy: {old:.2f} -> {profile.target_energy:.2f}")
 
     # --- Acoustic ---
     if parsed.likes_acoustic is not None and parsed.likes_acoustic != profile.likes_acoustic:
         old = profile.likes_acoustic
         profile.likes_acoustic = parsed.likes_acoustic
-        changes.append(f"likes_acoustic: {old} → {profile.likes_acoustic}")
+        changes.append(f"likes_acoustic: {old} -> {profile.likes_acoustic}")
 
     # --- Mood ---
     if parsed.new_mood and parsed.new_mood != profile.favorite_mood:
         old = profile.favorite_mood
         profile.favorite_mood = parsed.new_mood
-        changes.append(f"favorite_mood: {old} → {profile.favorite_mood}")
+        changes.append(f"favorite_mood: {old} -> {profile.favorite_mood}")
 
     # --- Genre ---
     if parsed.new_genre and parsed.new_genre != profile.favorite_genre:
         old = profile.favorite_genre
         profile.favorite_genre = parsed.new_genre
-        changes.append(f"favorite_genre: {old} → {profile.favorite_genre}")
+        changes.append(f"favorite_genre: {old} -> {profile.favorite_genre}")
 
     # --- Liked song inference ---
     for song_id in parsed.liked_song_ids:
@@ -150,7 +150,7 @@ def update_profile_from_feedback(
             profile.target_energy = round(max(0.0, min(1.0, profile.target_energy + nudge)), 2)
             changes.append(
                 f"liked song {song_id} ({liked_song.title}): "
-                f"energy nudge {old_energy:.2f} → {profile.target_energy:.2f}"
+                f"energy nudge {old_energy:.2f} -> {profile.target_energy:.2f}"
             )
 
     profile.feedback_history.append(parsed.raw)
