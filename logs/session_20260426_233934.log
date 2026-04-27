@@ -1,0 +1,14 @@
+[23:39:34] [INFO    ] [TOOL] collect_input()
+[23:40:09] [INFO    ] [TOOL] select_mode()
+[23:40:09] [INFO    ] [SESSION] Started — scoring mode: Genre-First
+[23:40:09] [INFO    ] [AGENT] Planning next actions: rerun_recommender, generate_explanations
+[23:40:09] [INFO    ] [TOOL] rerun_recommender() -> 5 results, top score 8.45
+[23:40:09] [INFO    ] [ROUND] Round 0 complete — top score: 8.45
+[23:40:32] [INFO    ] [FEEDBACK] received: "too energetic"
+[23:40:32] [INFO    ] [TOOL] parse_feedback() -> energy_delta=-0.15, mood=None, genre=None
+[23:40:32] [INFO    ] [AGENT] Planning next actions: update_profile, rerun_recommender, generate_explanations
+[23:40:32] [INFO    ] [TOOL] update_profile() -> 1 change(s)
+[23:40:32] [INFO    ] [PROFILE] target_energy: 0.50 -> 0.35
+[23:40:32] [INFO    ] [TOOL] rerun_recommender() -> 5 results, top score 8.15
+[23:40:32] [INFO    ] [ROUND] Round 1 complete — top score: 8.15
+[23:40:53] [INFO    ] [SESSION] Ended after 1 round(s). Log saved to C:\Users\USER\Projects\applied-ai-system-project\src\..\logs\session_20260426_233934.log

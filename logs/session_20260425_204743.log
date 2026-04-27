@@ -1,0 +1,23 @@
+[20:47:43] [INFO    ] [TOOL] collect_input()
+[20:48:05] [WARNING ] [GUARDRAIL] Genre "rnb" not found in catalog. Genre matching will be skipped.
+[20:48:05] [WARNING ] [GUARDRAIL] Mood "calm" not found in catalog. Mood matching will be skipped, falling back to genre and energy.
+[20:48:17] [INFO    ] [TOOL] select_mode()
+[20:48:17] [INFO    ] [SESSION] Started — scoring mode: Genre-First
+[20:48:17] [INFO    ] [AGENT] Planning next actions: rerun_recommender, generate_explanations
+[20:48:17] [INFO    ] [TOOL] rerun_recommender() -> 5 results, top score 2.40
+[20:48:17] [INFO    ] [ROUND] Round 0 complete — top score: 2.40
+[20:48:44] [INFO    ] [FEEDBACK] received: "more energy"
+[20:48:44] [INFO    ] [TOOL] parse_feedback() -> energy_delta=+0.15, mood=None, genre=None
+[20:48:44] [INFO    ] [AGENT] Planning next actions: update_profile, rerun_recommender, generate_explanations
+[20:48:44] [INFO    ] [TOOL] update_profile() -> 1 change(s)
+[20:48:44] [INFO    ] [PROFILE] target_energy: 0.90 -> 1.00
+[20:48:45] [INFO    ] [TOOL] rerun_recommender() -> 5 results, top score 2.21
+[20:48:45] [INFO    ] [ROUND] Round 1 complete — top score: 2.21
+[20:49:25] [INFO    ] [FEEDBACK] received: "i like song 5"
+[20:49:25] [INFO    ] [TOOL] parse_feedback() -> energy_delta=+0.00, mood=None, genre=None
+[20:49:25] [INFO    ] [AGENT] Planning next actions: update_profile, rerun_recommender, generate_explanations
+[20:49:25] [INFO    ] [TOOL] update_profile() -> 1 change(s)
+[20:49:25] [INFO    ] [PROFILE] liked song 35 (Jazz Nocturne): energy nudge 1.00 -> 0.94
+[20:49:25] [INFO    ] [TOOL] rerun_recommender() -> 5 results, top score 2.33
+[20:49:25] [INFO    ] [ROUND] Round 2 complete — top score: 2.33
+[20:49:35] [INFO    ] [SESSION] Ended after 2 round(s). Log saved to C:\Users\USER\Projects\applied-ai-system-project\src\..\logs\session_20260425_204743.log

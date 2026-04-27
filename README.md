@@ -299,3 +299,6 @@ reports/            Optional evaluation report output
 ## Model Card
 
 See [model_card.md](model_card.md) for a full breakdown of intended use, limitations, bias analysis, and evaluation methodology.
+
+Demo Video Link:
+[text](https://www.loom.com/share/92e259fb10164af89b4647a459977b15)

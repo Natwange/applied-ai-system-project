@@ -1,0 +1,22 @@
+[20:37:18] [INFO    ] [TOOL] collect_input()
+[20:37:48] [WARNING ] [GUARDRAIL] Genre "amapiano" not found in catalog. Genre matching will be skipped.
+[20:37:54] [INFO    ] [TOOL] select_mode()
+[20:37:54] [INFO    ] [SESSION] Started — scoring mode: Genre-First
+[20:37:54] [INFO    ] [AGENT] Planning next actions: rerun_recommender, generate_explanations
+[20:37:54] [INFO    ] [TOOL] rerun_recommender() -> 5 results, top score 5.05
+[20:37:54] [INFO    ] [ROUND] Round 0 complete — top score: 5.05
+[20:38:16] [INFO    ] [FEEDBACK] received: "I liked song 1"
+[20:38:16] [INFO    ] [TOOL] parse_feedback() -> energy_delta=+0.00, mood=None, genre=None
+[20:38:16] [INFO    ] [AGENT] Planning next actions: update_profile, rerun_recommender, generate_explanations
+[20:38:16] [INFO    ] [TOOL] update_profile() -> 1 change(s)
+[20:38:16] [INFO    ] [PROFILE] liked song 29 (Bounce Back): energy nudge 0.70 -> 0.71
+[20:38:16] [INFO    ] [TOOL] rerun_recommender() -> 5 results, top score 5.07
+[20:38:16] [INFO    ] [ROUND] Round 1 complete — top score: 5.07
+[20:38:44] [INFO    ] [FEEDBACK] received: "more chill"
+[20:38:44] [INFO    ] [TOOL] parse_feedback() -> energy_delta=+0.00, mood=chill, genre=None
+[20:38:44] [INFO    ] [AGENT] Planning next actions: update_profile, rerun_recommender, generate_explanations
+[20:38:44] [INFO    ] [TOOL] update_profile() -> 1 change(s)
+[20:38:44] [INFO    ] [PROFILE] favorite_mood: happy -> chill
+[20:38:44] [INFO    ] [TOOL] rerun_recommender() -> 5 results, top score 4.50
+[20:38:44] [INFO    ] [ROUND] Round 2 complete — top score: 4.50
+[20:38:59] [INFO    ] [SESSION] Ended after 2 round(s). Log saved to C:\Users\USER\Projects\applied-ai-system-project\src\..\logs\session_20260425_203718.log
